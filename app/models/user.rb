@@ -1,5 +1,7 @@
 class User < ApplicationRecord
-    has_many :events
-    has_many :user_events
-    has_secure_password 
+    has_secure_password
+    has_many :join_events, dependent: :destroy
+    has_many :events,
+    :through => :join_events, dependent: :destroy
 end
+    
