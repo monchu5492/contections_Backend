@@ -1,8 +1,43 @@
 class ApplicationController < ActionController::API
-#     u1 = User.create(user_name: "monchu1", name: "tanner", bio: "i, am, job", address: "1435 regat st. 487262 asdhre", password: "fudgemuffin")
-# u2 = User.create(user_name: "jamsen435", name: "mark", bio: "dsfxghjgfdhadsfg", address: "8743 kjdsfg 78394 dsfkjf", password: "joopie")
 
-# e1 = Event.create(name: "the real deal", picture: "this picture", links: "adfgadfgadfg", description: "adrfgadrgaregaerg", address: "sdfgsdfgafdadg" user: u1)
+  before_action :authorized
+ 
+  def encode_token(payload)
+    # should store secret in env variable
+    JWT.encode(payload, 'my_s3cr3t')
+  end
+ 
+  def auth_header
+    # { Authorization: 'Bearer <token>' }
+    request.headers['Authorization']
+  end
 
-# ue1 = UserEver.create(user: u2, event: e1)
+  def token
+    # header: { 'Authorization': 'Bearer <token>' }
+    request.headers['Authorization']
+  end
+ 
+  def decoded_token
+      begin
+        JWT.decode(token, 'my_s3cr3t', true, algorithm: 'HS256')
+      rescue JWT::DecodeError
+        [{error: "Invalid Token"}]
+      end
+  end
+
+  def user_id
+    decoded_token.first['user_id']
+  end
+ 
+  def current_user
+      @user ||= User.find_by(id: user_id)
+  end
+ 
+  def logged_in?
+    !!current_user
+  end
+ 
+  def authorized
+    render json: { message: 'Please log in' }, status: :unauthorized unless logged_in?
+  end
 end

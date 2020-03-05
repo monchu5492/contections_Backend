@@ -11,6 +11,7 @@ class JoinEventsController < ApplicationController
     end
 
     def create
+        puts "YOU ARE JOINING AN EVENT"
         join_event = JoinEvent.new(params.require(:join_event).permit(:user_id, :event_id))
         if join_event.save
             render json: join_event   

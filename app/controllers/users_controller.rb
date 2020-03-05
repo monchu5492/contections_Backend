@@ -1,4 +1,7 @@
 class UsersController < ApplicationController
+
+    skip_before_action :authorized, only: [:create]
+
     def index
     user = User.all
     puts user
@@ -10,14 +13,29 @@ class UsersController < ApplicationController
         render json: user
     end
 
-    def create
-        user = User.new(params.require(:user).permit(:user_name, :name, :bio, :address, :profile_pic, :password))
-        if user.save
-            render json: user   
+    def profile
+        render json: { user: UserSerializer.new(current_user) }, status: :accepted
+      end
+     
+      def create
+        @user = User.create(user_params)
+        if @user.valid?
+          @token = encode_token({ user_id: @user.id })
+          render json: { user: UserSerializer.new(@user), jwt: @token }, status: :created
         else
-        #   flash[:message] = user.errors.full_messages
-        end    
-    end
+          render json: { error: 'failed to create user' }, status: :not_acceptable
+        end
+      end
+
+      def attendEvent
+        puts "YOU HAVE ATEMPTED TO JOIN AN EVENT"
+        # event = Event.find_by(id: params[:event_id])
+        # user = User.find_by(id: parmas[:user_id])
+        puts params
+        join = JoinEvent.new(params)
+        puts join
+
+      end
 
     def update
         user = User.find(params[:id])
@@ -38,4 +56,9 @@ class UsersController < ApplicationController
     render :json => @temp 
     # {message: 'Your user has been removed!'}
     end
+
+    private
+  def user_params
+    params.require(:user).permit(:user_name, :name, :bio, :address, :profile_pic, :password)
+  end
 end
